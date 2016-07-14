@@ -31,22 +31,24 @@ try {
     	$response = $client->sendChatAction(['chat_id' => $update->message->chat->id, 'action' => 'typing']);
     	$response = $client->sendMessage([
         	'chat_id' => $update->message->chat->id,
-        	'text' => "Ngga mau ketinggalan dengan berbagai info dan update dari YISC Al Azhar? Follow aja nih : \n
-			Facebook : http://facebook.com/yisc.alazhar\n
-			Twitter  : http://twitter.com/yisc_alazhar\n
-			Google+  : https://plus.google.com/103786599270861299742\n
-			Youtube  : https://www.youtube.com/channel/UCLGTGGY_KFCAtb11zhy6xHA
+        	'text' => "Ngga mau ketinggalan dengan berbagai info dan update dari YISC Al Azhar? Follow aja nih :
+Facebook : http://facebook.com/yisc.alazhar
+Twitter  : http://twitter.com/yisc_alazhar
+Google+  : https://plus.google.com/103786599270861299742
+Youtube  : https://www.youtube.com/channel/UCLGTGGY_KFCAtb11zhy6xHA
 			"
      	]);
     }
     else if($update->message->text == '/salam')
     {
+		$randomAyah = getRandomAyah();
+		
     	$response = $client->sendChatAction(['chat_id' => $update->message->chat->id, 'action' => 'typing']);
     	$response = $client->sendMessage([
     		'chat_id' => $update->message->chat->id,
-    		'text' => "Wa'alaikumussalaam Warahmatullahi Wabarakaatuh \n
-			Semoga Allah SWT senantiasa melimpahkan rahmat dan karunia-Nya kepada kita semua dalam menjalankan aktivitas sehari-hari, Amiin. \n
-			Untuk daftar perintah silahkan ketik /help"
+    		'text' => "Wa'alaikumussalaam Warahmatullahi Wabarakaatuh\n
+Inspirasi harian : $randomAyah\n
+Untuk mengetahui cara berinteraksi dengan Marbot YISC Al Azhar, silahkan ketik /help"
     	]);
 
     }
@@ -55,10 +57,11 @@ try {
 		$response = $client->sendChatAction(['chat_id' => $update->message->chat->id, 'action' => 'typing']);
 		$response = $client->sendMessage([
 			'chat_id' => $update->message->chat->id,
-			'text' => "Daftar Perintah Marbot YISC Al Azhar\n
-			/salam - Dapatkan informasi terbaru dari YISC Al Azhar
-			/beye - Berita dan Artikel Terbaru dari website www.yisc-alazhar.or.id
-			/sosmed - Daftar Sosial Media YISC Al Azhar
+			'text' => "Daftar Perintah Marbot YISC Al Azhar
+/salam - Dapatkan informasi terbaru dari YISC Al Azhar
+/beye - Berita dan Artikel Terbaru dari website www.yisc-alazhar.or.id
+/inspirasi - Inspirasi dari ayat suci Al Qur'an khusus untuk kamu
+/sosmed - Daftar Sosial Media YISC Al Azhar
 			"
 		]);
     }
@@ -83,9 +86,30 @@ try {
     	$response = $client->sendChatAction(['chat_id' => $update->message->chat->id, 'action' => 'typing']);
     	$response = $client->sendMessage([
     		'chat_id' => $update->message->chat->id,
-    		'text' => "Assalaamu'alaikum Warahmatullahi Wabarakaatuh \n
-			Perkenalkan saya adalah Marbot YISC Al Azhar yang akan membantu kamu mendapatkan informasi terbaru seputar YISC Al Azhar. \n
-			Untuk memulai, silahkan ketik /salam"
+    		'text' => "Assalaamu'alaikum Warahmatullahi Wabarakaatuh
+Perkenalkan saya adalah Marbot YISC Al Azhar yang akan membantu kamu mendapatkan informasi terbaru seputar YISC Al Azhar.
+Untuk memulai, silahkan ketik /salam"
+    		]);
+    }
+    else if($update->message->text == '/inspirasi')
+    {
+		$text = "Inspirasi Ayat Suci Al Qur'an\n";
+		$text .= getRandomAyah();
+
+    	$response = $client->sendChatAction(['chat_id' => $update->message->chat->id, 'action' => 'typing']);
+    	$response = $client->sendMessage([
+    		'chat_id' => $update->message->chat->id,
+    		'text' => $text
+    		]);
+    }
+    else if($update->message->text == '/waktushalat')
+    {
+		$text = "'afwan, fitur ini belum tersedia";//getShalatTime();
+
+    	$response = $client->sendChatAction(['chat_id' => $update->message->chat->id, 'action' => 'typing']);
+    	$response = $client->sendMessage([
+    		'chat_id' => $update->message->chat->id,
+    		'text' => $text
     		]);
     }
     else
@@ -102,4 +126,44 @@ try {
     //echo error message ot log it
     //echo $e->getMessage();
 
+}
+
+function getApi($url){
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_URL, $url);
+	$result = curl_exec($ch);
+	curl_close($ch);
+	
+	return $result;
+}
+
+function getShalatTime(){
+	$result = getApi('http://muslimsalat.com/jakarta.json?key=d9f9908ca4c7567ed473fb80dece7324');
+	$shalat = json_decode($result);
+	$waktu = $shalat['items'][0];
+	
+	$msg = "Waktu Shalat Jakarta dan Sekitarnya\n".date('j, d M Y')."\n";
+	$msg .= "Shubuh  : ".$waktu['fajr']."\n";
+	$msg .= "Terbit  : ".$waktu['shurooq']."\n";
+	$msg .= "Zhuhur  : ".$waktu['dhuhr']."\n";
+	$msg .= "Ashar   : ".$waktu['asr']."\n";
+	$msg .= "Maghrib : ".$waktu['maghrib']."\n";
+	$msg .= "Isya    : ".$waktu['isha'];
+	
+	return $msg;
+}
+
+function getRandomAyah(){
+	$rand = rand(1,6236); // random ayah from 1:1 - 114:7
+	
+	$result = getApi('http://api.globalquran.com/ayah/'.$rand.'/id.indonesian?key=d1bdfe6421908ff4cfb71fd1e7630e0b');
+	
+	$data = json_decode($result,true);
+	$data = $data['quran']['id.indonesian'];
+	$line = array();
+	foreach($data as $id=>$val)
+		$line = $val;
+	return $line['verse']."\n[QS. ".$line['surah'].":".$line['ayah']."]";
 }
